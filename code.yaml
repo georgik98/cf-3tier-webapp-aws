@@ -39,6 +39,47 @@ Resources:
       Tags:
         - Key: Name
           Value: 'Public Subnet (web) - eu-central-1c'
+  InternetGateway:
+    Type: 'AWS::EC2::InternetGateway'
+    Properties:
+      Tags:
+        - Key: Name
+          Value: InternetGateway
+  AttachInternetGateway:
+    Type: 'AWS::EC2::VPCGatewayAttachment'
+    Properties:
+      InternetGatewayId: !Ref InternetGateway
+      VpcId: !Ref VPC
+  RouteTable: 
+    Type: 'AWS::EC2::RouteTable'
+    Properties:
+      Tags:
+        - Key: Name
+          Value: RouteTable
+      VpcId: !Ref VPC
+  PublicRouteOne:
+    Type: AWS::EC2::Route
+    DependsOn: InternetGateway
+    Properties:
+      GatewayId: !Ref InternetGateway
+      RouteTableId: !Ref RouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+  
+  PublicSubnetRouteTableAssociation1: #route table association with public subnet 1
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref RouteTable
+      SubnetId: !Ref PublicSubnet1
+  PublicSubnetRouteTableAssociation2: #route table association with public subnet 2
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref RouteTable
+      SubnetId: !Ref PublicSubnet2
+  PublicSubnetRouteTableAssociation3: #route table association with public subnet 3
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref RouteTable
+      SubnetId: !Ref PublicSubnet3
 
 Outputs:
   VpcId:
