@@ -1,0 +1,47 @@
+AWSTemplateFormatVersion: 2010-09-09
+Resources:
+  VPC:
+    Type: 'AWS::EC2::VPC'
+    Properties:
+      CidrBlock: 172.20.0.0/20
+      EnableDnsHostnames: True
+      EnableDnsSupport: True
+      Tags:
+        - Key: Name
+          Value: VPC
+  PublicSubnet1:
+    Type: 'AWS::EC2::Subnet'
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: 172.20.1.0/24
+      AvailabilityZone: 'eu-central-1a'
+      MapPublicIpOnLaunch: true
+      Tags:
+        - Key: Name
+          Value: 'Public Subnet (web) - eu-central-1a'
+  PublicSubnet2:
+    Type: 'AWS::EC2::Subnet'
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: 172.20.2.0/24
+      AvailabilityZone: 'eu-central-1b'
+      MapPublicIpOnLaunch: true
+      Tags:
+        - Key: Name
+          Value: 'Public Subnet (web) - eu-central-1b'
+  PublicSubnet3:
+    Type: 'AWS::EC2::Subnet'
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: 172.20.3.0/24
+      AvailabilityZone: 'eu-central-1c'
+      MapPublicIpOnLaunch: true
+      Tags:
+        - Key: Name
+          Value: 'Public Subnet (web) - eu-central-1c'
+
+Outputs:
+  VpcId:
+    Value: !Ref VPC
+    Export:
+      Name: !Sub "${AWS::StackName}-VpcId"
