@@ -1,6 +1,6 @@
 AWSTemplateFormatVersion: 2010-09-09
 Resources:
-  VPC:
+  VPC: #Create 1 VPC for the whole project
     Type: 'AWS::EC2::VPC'
     Properties:
       CidrBlock: 172.20.0.0/20
@@ -9,7 +9,7 @@ Resources:
       Tags:
         - Key: Name
           Value: VPC
-  PublicSubnet1:
+  PublicSubnet1: #First public subnet in eu-central-1a AZ
     Type: 'AWS::EC2::Subnet'
     Properties:
       VpcId: !Ref VPC
@@ -19,7 +19,7 @@ Resources:
       Tags:
         - Key: Name
           Value: 'Public Subnet (web) - eu-central-1a'
-  PublicSubnet2:
+  PublicSubnet2: #Second public subnet in eu-central-1b AZ
     Type: 'AWS::EC2::Subnet'
     Properties:
       VpcId: !Ref VPC
@@ -29,7 +29,7 @@ Resources:
       Tags:
         - Key: Name
           Value: 'Public Subnet (web) - eu-central-1b'
-  PublicSubnet3:
+  PublicSubnet3: #Third public subnet in eu-central-1c AZ
     Type: 'AWS::EC2::Subnet'
     Properties:
       VpcId: !Ref VPC
@@ -39,7 +39,7 @@ Resources:
       Tags:
         - Key: Name
           Value: 'Public Subnet (web) - eu-central-1c'
-  InternetGateway:
+  InternetGateway: # Internet Gateway for internet access for the public subnets
     Type: 'AWS::EC2::InternetGateway'
     Properties:
       Tags:
@@ -57,7 +57,7 @@ Resources:
         - Key: Name
           Value: RouteTable
       VpcId: !Ref VPC
-  PublicRouteOne:
+  PublicRouteOne: 
     Type: AWS::EC2::Route
     DependsOn: InternetGateway
     Properties:
@@ -80,6 +80,36 @@ Resources:
     Properties:
       RouteTableId: !Ref RouteTable
       SubnetId: !Ref PublicSubnet3
+
+# Public subnets
+#---------------------------------------------------------------- 
+  PrivateSubnetApp1:
+    Type: 'AWS::EC2::Subnet'
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: 172.20.4.0/24
+      AvailabilityZone: 'eu-central-1a'
+      Tags:
+        - Key: Name
+          Value: 'Private Subnet (app) - eu-central-1a'
+  PrivateSubnetApp2:
+    Type: 'AWS::EC2::Subnet'
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: 172.20.5.0/24
+      AvailabilityZone: 'eu-central-1b'
+      Tags:
+        - Key: Name
+          Value: 'Private Subnet (app) - eu-central-1b'
+  PrivateSubnetApp3:
+    Type: 'AWS::EC2::Subnet'
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: 172.20.6.0/24
+      AvailabilityZone: 'eu-central-1c'
+      Tags:
+        - Key: Name
+          Value: 'Private Subnet (app) - eu-central-1c'
 
 Outputs:
   VpcId:
