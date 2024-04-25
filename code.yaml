@@ -110,7 +110,8 @@ Resources:
       Tags:
         - Key: Name
           Value: 'Private Subnet (app) - eu-central-1c'
-  NatGatewayEipOne:
+# Private subnets have been created
+  NatGatewayEipOne: #Start
     Type: 'AWS::EC2::EIP'
     Properties:
       Domain: VPC
@@ -124,32 +125,105 @@ Resources:
       Tags:
         - Key: Name
           Value: NatGatewayOne
-  PrivateRouteTable:
+  PrivateRouteTableOne:
     Type: 'AWS::EC2::RouteTable'
     Properties:
       VpcId: !Ref VPC
       Tags:
         - Key: Name
           Value: PrivateRouteTable
-  Route:
+  RouteOne:
     Type: 'AWS::EC2::Route'
     DependsOn: NatGatewayOne
     Properties:
-      RouteTableId: !Ref PrivateRouteTable
+      RouteTableId: !Ref PrivateRouteTableOne
       DestinationCidrBlock: '0.0.0.0/0'
       NatGatewayId: !Ref NatGatewayOne
-  PrivateSubnetRouteTableAssociation:
+  PrivateSubnetRouteTableAssociationOne:
     Type: 'AWS::EC2::SubnetRouteTableAssociation'
     Properties:
       SubnetId: !Ref PrivateSubnetApp1
-      RouteTableId: !Ref PrivateRouteTable
-
+      RouteTableId: !Ref PrivateRouteTableOne
+# Created the first nat with eip
+  NatGatewayEipTwo: #Start 2
+    Type: 'AWS::EC2::EIP'
+    Properties:
+      Domain: VPC
+  NatGatewayTwo:
+    Type: 'AWS::EC2::NatGateway'
+    DependsOn: NatGatewayEipTwo
+    Properties:
+      AllocationId:
+        Fn::GetAtt : [NatGatewayEipTwo, AllocationId]  
+      SubnetId: !Ref PublicSubnet2  
+      Tags:
+        - Key: Name
+          Value: NatGatewayTwo
+  PrivateRouteTableTwo:
+    Type: 'AWS::EC2::RouteTable'
+    Properties:
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: PrivateRouteTableTwo
+  RouteTwo:
+    Type: 'AWS::EC2::Route'
+    DependsOn: NatGatewayTwo
+    Properties:
+      RouteTableId: !Ref PrivateRouteTableTwo
+      DestinationCidrBlock: '0.0.0.0/0'
+      NatGatewayId: !Ref NatGatewayTwo
+  PrivateSubnetRouteTableAssociationTwo:
+    Type: 'AWS::EC2::SubnetRouteTableAssociation'
+    Properties:
+      SubnetId: !Ref PrivateSubnetApp2
+      RouteTableId: !Ref PrivateRouteTableTwo
+# Created the first nat with eip
+  NatGatewayEipThree: #Start 3
+    Type: 'AWS::EC2::EIP'
+    Properties:
+      Domain: VPC
+  NatGatewayThree:
+    Type: 'AWS::EC2::NatGateway'
+    DependsOn: NatGatewayEipThree
+    Properties:
+      AllocationId:
+        Fn::GetAtt : [NatGatewayEipThree, AllocationId]  
+      SubnetId: !Ref PublicSubnet3  
+      Tags:
+        - Key: Name
+          Value: NatGatewayThree
+  PrivateRouteTableThree:
+    Type: 'AWS::EC2::RouteTable'
+    Properties:
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: PrivateRouteTableThree
+  RouteThree:
+    Type: 'AWS::EC2::Route'
+    DependsOn: NatGatewayThree
+    Properties:
+      RouteTableId: !Ref PrivateRouteTableThree
+      DestinationCidrBlock: '0.0.0.0/0'
+      NatGatewayId: !Ref NatGatewayThree
+  PrivateSubnetRouteTableAssociationThree:
+    Type: 'AWS::EC2::SubnetRouteTableAssociation'
+    Properties:
+      SubnetId: !Ref PrivateSubnetApp3
+      RouteTableId: !Ref PrivateRouteTableThree
 
 Outputs:
   VpcId:
     Value: !Ref VPC
     Export:
       Name: !Sub "${AWS::StackName}-VpcId"
-  NatGatewayIP:
-    Description: 'EIP associated with the NAT Gateway'
+  NatGatewayIpOne:
+    Description: 'EIP associated with the NAT Gateway1'
     Value: !Ref NatGatewayEipOne
+  NatGatewayIpTwo:
+    Description: 'EIP associated with the NAT Gateway2'
+    Value: !Ref NatGatewayEipTwo
+  NatGatewayIpThree:
+    Description: 'EIP associated with the NAT Gateway3'
+    Value: !Ref NatGatewayEipThree
