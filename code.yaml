@@ -81,7 +81,7 @@ Resources:
       RouteTableId: !Ref RouteTable
       SubnetId: !Ref PublicSubnet3
 
-# Public subnets
+# Private subnets
 #---------------------------------------------------------------- 
   PrivateSubnetApp1:
     Type: 'AWS::EC2::Subnet'
@@ -110,9 +110,46 @@ Resources:
       Tags:
         - Key: Name
           Value: 'Private Subnet (app) - eu-central-1c'
+  NatGatewayEipOne:
+    Type: 'AWS::EC2::EIP'
+    Properties:
+      Domain: VPC
+  NatGatewayOne:
+    Type: 'AWS::EC2::NatGateway'
+    DependsOn: NatGatewayEipOne
+    Properties:
+      AllocationId:
+        Fn::GetAtt : [NatGatewayEipOne, AllocationId]  
+      SubnetId: !Ref PublicSubnet1  
+      Tags:
+        - Key: Name
+          Value: NatGatewayOne
+  PrivateRouteTable:
+    Type: 'AWS::EC2::RouteTable'
+    Properties:
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: PrivateRouteTable
+  Route:
+    Type: 'AWS::EC2::Route'
+    DependsOn: NatGatewayOne
+    Properties:
+      RouteTableId: !Ref PrivateRouteTable
+      DestinationCidrBlock: '0.0.0.0/0'
+      NatGatewayId: !Ref NatGatewayOne
+  PrivateSubnetRouteTableAssociation:
+    Type: 'AWS::EC2::SubnetRouteTableAssociation'
+    Properties:
+      SubnetId: !Ref PrivateSubnetApp1
+      RouteTableId: !Ref PrivateRouteTable
+
 
 Outputs:
   VpcId:
     Value: !Ref VPC
     Export:
       Name: !Sub "${AWS::StackName}-VpcId"
+  NatGatewayIP:
+    Description: 'EIP associated with the NAT Gateway'
+    Value: !Ref NatGatewayEipOne
