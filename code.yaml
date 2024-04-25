@@ -212,6 +212,87 @@ Resources:
     Properties:
       SubnetId: !Ref PrivateSubnetApp3
       RouteTableId: !Ref PrivateRouteTableThree
+# 3 private app subnets with NAT were created
+#----------------------------------------------
+# 3 private DB subnets are now going to be created
+  PrivateSubnetDB1:
+    Type: 'AWS::EC2::Subnet'
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: 172.20.7.0/24
+      AvailabilityZone: 'eu-central-1a'
+      Tags:
+        - Key: Name
+          Value: 'Private Subnet (DB) - eu-central-1a'
+  PrivateSubnetDB2:
+    Type: 'AWS::EC2::Subnet'
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: 172.20.8.0/24
+      AvailabilityZone: 'eu-central-1b'
+      Tags:
+        - Key: Name
+          Value: 'Private Subnet (DB) - eu-central-1b'
+  PrivateSubnetDB3:
+    Type: 'AWS::EC2::Subnet'
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: 172.20.9.0/24
+      AvailabilityZone: 'eu-central-1c'
+      Tags:
+        - Key: Name
+          Value: 'Private Subnet (DB) - eu-central-1c'
+#------------------------------------------
+  PrivateRouteTableDB:
+    Type: 'AWS::EC2::RouteTable'
+    Properties:
+      VpcId: !Ref VPC
+  PrivateRouteDB:
+    Type: 'AWS::EC2::Route'
+    Properties:
+      RouteTableId: !Ref PrivateRouteTableDB
+      DestinationCidrBlock: '0.0.0.0/0'
+      NatGatewayId: !Ref NatGatewayOne
+  SubnetRouteTableAssociationDBOne:
+    Type: 'AWS::EC2::SubnetRouteTableAssociation'
+    Properties:
+      SubnetId: !Ref PrivateSubnetDB1
+      RouteTableId: !Ref PrivateRouteTableDB
+#-------------------------------------------
+  PrivateRouteTableDB2:
+    Type: 'AWS::EC2::RouteTable'
+    Properties:
+      VpcId: !Ref VPC
+  PrivateRouteDB2:
+    Type: 'AWS::EC2::Route'
+    Properties:
+      RouteTableId: !Ref PrivateRouteTableDB2
+      DestinationCidrBlock: '0.0.0.0/0'
+      NatGatewayId: !Ref NatGatewayTwo
+  SubnetRouteTableAssociationDBTwo:
+    Type: 'AWS::EC2::SubnetRouteTableAssociation'
+    Properties:
+      SubnetId: !Ref PrivateSubnetDB2
+      RouteTableId: !Ref PrivateRouteTableDB2
+#--------------------------------------------
+  PrivateRouteTableDB3:
+    Type: 'AWS::EC2::RouteTable'
+    Properties:
+      VpcId: !Ref VPC
+  PrivateRouteDB3:
+    Type: 'AWS::EC2::Route'
+    Properties:
+      RouteTableId: !Ref PrivateRouteTableDB3
+      DestinationCidrBlock: '0.0.0.0/0'
+      NatGatewayId: !Ref NatGatewayThree
+  SubnetRouteTableAssociationDBThree:
+    Type: 'AWS::EC2::SubnetRouteTableAssociation'
+    Properties:
+      SubnetId: !Ref PrivateSubnetDB3
+      RouteTableId: !Ref PrivateRouteTableDB3
+
+# I use 1 NAT Gateway per AZ because NAT Gateway needs a single
+# EIP to handle the outbound internet traffic for multiple subnets in the same AZ.
 
 Outputs:
   VpcId:
