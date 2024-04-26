@@ -347,9 +347,56 @@ PrivatePhpInstance:
     SecurityGroupIds:
       - !Ref PrivatePhpInstanceSG
     KeyName: 'GK16'
+    UserData:
+        Fn::Base64: !Sub |
+          #!/bin/bash
+          apt-get update -y
+          apt-get upgrade -y
+          # Install Apache
+          apt-get install -y apache2
+          # Install MySQL
+          apt-get install -y mysql-server
+          # Install PHP
+          apt-get install -y php libapache2-mod-php php-mysql
+          # Restart Apache to load new configuration
+          systemctl restart apache2
+          # Set up to run the LAMP server on boot
+          systemctl enable apache2
+          systemctl enable mysql
     Tags:
       - Key: Name
         Value: 'PrivatePhpInstance'
+  
+#----------------------------------------
+# Second private php instance
+PrivatePhpInstance2:
+  Type: 'AWS::EC2::Instance'
+  Properties:
+    InstanceType: 't2.micro'
+    ImageId: 'ami-0a946522147cbcbcc'
+    SubnetId: !Ref PrivateSubnetApp2
+    SecurityGroupIds:
+      - !Ref PrivatePhpInstanceSG
+    KeyName: 'GK16'
+    UserData:
+        Fn::Base64: !Sub |
+          #!/bin/bash
+          apt-get update -y
+          apt-get upgrade -y
+          # Install Apache
+          apt-get install -y apache2
+          # Install MySQL
+          apt-get install -y mysql-server
+          # Install PHP
+          apt-get install -y php libapache2-mod-php php-mysql
+          # Restart Apache to load new configuration
+          systemctl restart apache2
+          # Set up to run the LAMP server on boot
+          systemctl enable apache2
+          systemctl enable mysql
+    Tags:
+      - Key: Name
+        Value: 'PrivatePhpInstance2'
     
 
 
