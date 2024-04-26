@@ -294,6 +294,66 @@ Resources:
 # I use 1 NAT Gateway per AZ because NAT Gateway needs a single
 # EIP to handle the outbound internet traffic for multiple subnets in the same AZ.
 
+# This was the networking infrastructure part of the project.
+
+#-------------------------------------------------
+# EC2 in public jump server
+JumpServerSG:
+    Type: 'AWS::EC2::SecurityGroup'
+    Properties:
+      GroupDescription: 'Enable SSH access via port 22 and HTTP access via port 80'
+      VpcId: !Ref VPC
+      SecurityGroupIngress:
+        - IpProtocol: 'tcp'
+          FromPort: 22
+          ToPort: 22
+          CidrIp: '0.0.0.0/0'
+        - IpProtocol: 'tcp'
+          FromPort: 80
+          ToPort: 80
+          CidrIp: '0.0.0.0/0'
+JumpServer:
+  Type: 'AWS::EC2::Instance'
+  Properties:
+    InstanceType: 't2.micro'
+    ImageId: 'ami-0a946522147cbcbcc'
+    KeyName: 'GK16'
+    Tags:
+      - Key: Name
+        Value: 'JumpServer'
+    NetworkInterfaces:
+        - DeviceIndex: '0'
+          SubnetId: !Ref PublicSubnet1
+          AssociatePublicIpAddress: true
+          GroupSet:
+            - !Ref JumpServerSG
+
+PrivatePhpInstanceSG:
+    Type: 'AWS::EC2::SecurityGroup'
+    Properties:
+      GroupDescription: 'Enable SSH access only from the JumpServer'
+      VpcId: !Ref VPC
+      SecurityGroupIngress:
+        - IpProtocol: 'tcp'
+          FromPort: 22
+          ToPort: 22
+          SourceSecurityGroupId: !GetAtt JumpServerSG.GroupId  # Allowing SSH only from the JumpServer
+PrivatePhpInstance:
+  Type: 'AWS::EC2::Instance'
+  Properties:
+    InstanceType: 't2.micro'
+    ImageId: 'ami-0a946522147cbcbcc'
+    SubnetId: !Ref PrivateSubnetApp1
+    SecurityGroupIds:
+      - !Ref PrivatePhpInstanceSG
+    KeyName: 'GK16'
+    Tags:
+      - Key: Name
+        Value: 'PrivatePhpInstance'
+    
+
+
+
 Outputs:
   VpcId:
     Value: !Ref VPC

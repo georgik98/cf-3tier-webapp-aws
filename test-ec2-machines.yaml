@@ -1,0 +1,148 @@
+AWSTemplateFormatVersion: 2010-09-09
+Resources:
+  VPC: #Create 1 VPC for the whole project
+    Type: 'AWS::EC2::VPC'
+    Properties:
+      CidrBlock: 172.20.0.0/20
+      EnableDnsHostnames: True
+      EnableDnsSupport: True
+      Tags:
+        - Key: Name
+          Value: VPC
+  PublicSubnet1: #First public subnet in eu-central-1a AZ
+    Type: 'AWS::EC2::Subnet'
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: 172.20.1.0/24
+      AvailabilityZone: 'eu-central-1a'
+      MapPublicIpOnLaunch: true
+      Tags:
+        - Key: Name
+          Value: 'Public Subnet (web) - eu-central-1a'
+  InternetGateway: # Internet Gateway for internet access for the public subnets
+    Type: 'AWS::EC2::InternetGateway'
+    Properties:
+      Tags:
+        - Key: Name
+          Value: InternetGateway
+  AttachInternetGateway:
+    Type: 'AWS::EC2::VPCGatewayAttachment'
+    Properties:
+      InternetGatewayId: !Ref InternetGateway
+      VpcId: !Ref VPC
+  RouteTable: 
+    Type: 'AWS::EC2::RouteTable'
+    Properties:
+      Tags:
+        - Key: Name
+          Value: RouteTable
+      VpcId: !Ref VPC
+  PublicRouteOne: 
+    Type: AWS::EC2::Route
+    DependsOn: InternetGateway
+    Properties:
+      GatewayId: !Ref InternetGateway
+      RouteTableId: !Ref RouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+  PublicSubnetRouteTableAssociation1: #route table association with public subnet 1
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref RouteTable
+      SubnetId: !Ref PublicSubnet1
+# Private subnets
+#---------------------------------------------------------------- 
+  PrivateSubnetApp1:
+    Type: 'AWS::EC2::Subnet'
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: 172.20.4.0/24
+      AvailabilityZone: 'eu-central-1a'
+      Tags:
+        - Key: Name
+          Value: 'Private Subnet (app) - eu-central-1a'
+  NatGatewayEipOne: #Start
+    Type: 'AWS::EC2::EIP'
+    Properties:
+      Domain: VPC
+  NatGatewayOne:
+    Type: 'AWS::EC2::NatGateway'
+    DependsOn: NatGatewayEipOne
+    Properties:
+      AllocationId:
+        Fn::GetAtt : [NatGatewayEipOne, AllocationId]  
+      SubnetId: !Ref PublicSubnet1  
+      Tags:
+        - Key: Name
+          Value: NatGatewayOne
+  PrivateRouteTableOne:
+    Type: 'AWS::EC2::RouteTable'
+    Properties:
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: PrivateRouteTable
+  RouteOne:
+    Type: 'AWS::EC2::Route'
+    DependsOn: NatGatewayOne
+    Properties:
+      RouteTableId: !Ref PrivateRouteTableOne
+      DestinationCidrBlock: '0.0.0.0/0'
+      NatGatewayId: !Ref NatGatewayOne
+  PrivateSubnetRouteTableAssociationOne:
+    Type: 'AWS::EC2::SubnetRouteTableAssociation'
+    Properties:
+      SubnetId: !Ref PrivateSubnetApp1
+      RouteTableId: !Ref PrivateRouteTableOne
+#-----------------------------------------------
+  JumpServerSG:
+    Type: 'AWS::EC2::SecurityGroup'
+    Properties:
+      GroupDescription: 'Enable SSH access via port 22 and HTTP access via port 80'
+      VpcId: !Ref VPC
+      SecurityGroupIngress:
+        - IpProtocol: 'tcp'
+          FromPort: 22
+          ToPort: 22
+          CidrIp: '0.0.0.0/0'
+        - IpProtocol: 'tcp'
+          FromPort: 80
+          ToPort: 80
+          CidrIp: '0.0.0.0/0'
+  JumpServer:
+    Type: 'AWS::EC2::Instance'
+    Properties:
+      InstanceType: 't2.micro'
+      ImageId: 'ami-0a946522147cbcbcc'
+      KeyName: 'GK16'
+      Tags:
+        - Key: Name
+          Value: 'JumpServer'
+      NetworkInterfaces:
+        - DeviceIndex: '0'
+          SubnetId: !Ref PublicSubnet1
+          AssociatePublicIpAddress: true
+          GroupSet:
+            - !Ref JumpServerSG
+
+  PrivatePhpInstanceSG:
+    Type: 'AWS::EC2::SecurityGroup'
+    Properties:
+      GroupDescription: 'Enable SSH access only from the JumpServer'
+      VpcId: !Ref VPC
+      SecurityGroupIngress:
+        - IpProtocol: 'tcp'
+          FromPort: 22
+          ToPort: 22
+          SourceSecurityGroupId: !GetAtt JumpServerSG.GroupId  # Allowing SSH only from the JumpServer
+  PrivatePhpInstance:
+    Type: 'AWS::EC2::Instance'
+    Properties:
+      InstanceType: 't2.micro'
+      ImageId: 'ami-0a946522147cbcbcc'
+      SubnetId: !Ref PrivateSubnetApp1
+      SecurityGroupIds:
+        - !Ref PrivatePhpInstanceSG
+      KeyName: 'GK16'
+      Tags:
+        - Key: Name
+          Value: 'PrivatePhpInstance'
